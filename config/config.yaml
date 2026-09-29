@@ -1,0 +1,52 @@
+project:
+  random_state: 42
+  binary_labeling: true
+
+paths:
+  data_dir: data
+  model_dir: models
+  log_dir: logs
+  result_dir: results
+  user_file: configs/users.json 
+
+data:
+  label_column: null
+  drop_columns:
+    - Flow_ID
+    - Src_IP
+    - Dst_IP
+    - Timestamp
+  max_rows: null
+  test_size: 0.20
+
+feature_reduction:
+  enabled: true
+  method: select_k_best_f_classif
+  k: 64
+
+models:
+  decision_tree:
+    max_depth: 16
+    min_samples_leaf: 2
+  random_forest:
+    n_estimators: 150
+    max_depth: 18
+    min_samples_leaf: 2
+    n_jobs: -1
+  xgboost:
+    n_estimators: 200
+    max_depth: 8
+    learning_rate: 0.10
+    subsample: 0.80
+    colsample_bytree: 0.80
+    n_jobs: -1
+  mlp:
+    hidden_layer_sizes: [64, 32]
+    max_iter: 30
+    batch_size: 256
+    early_stopping: true
+
+security:
+  alert_confidence_threshold: 0.80
+  log_rotation_mb: 5
+  log_backup_count: 3

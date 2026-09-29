@@ -1,0 +1,17 @@
+# Core runtime and ML
+numpy>=1.26
+pandas>=2.2
+scikit-learn>=1.4
+xgboost>=2.0
+joblib>=1.3
+psutil>=5.9
+PyYAML>=6.0
+
+# Optional UI / capture / API features
+streamlit>=1.35
+scapy>=2.5
+fastapi>=0.110
+uvicorn>=0.29
+
+# Testing
+pytest>=8.0
