@@ -38,7 +38,6 @@ def build_model(name: str, config: dict[str, Any], random_state: int = 42):
             learning_rate=model_config.get('learning_rate', 0.10),
             subsample=model_config.get('subsample', 0.80),
             colsample_bytree=model_config.get('colsample_bytree', 0.80),
-            n_job=model_config.get('n_jobs', -1),
             objective='binary:logistic',
             eval_metric='logloss',
             tree_method='hist',

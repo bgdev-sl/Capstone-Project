@@ -44,14 +44,14 @@ def infer_label_column(frame: pd.DataFrame, configured_label: str | None = None)
     )
 
 def normalize_binary_labels(labels: pd.Series) -> pd.Series:
-    if pd.api.types.is_numeric_dtypes(labels):
+    if pd.api.types.is_numeric_dtype(labels):
         numeric = pd.to_numeric(labels, errors='coerce').fillna(0)
         unique = set(pd.unique(numeric))
         if unique.issubset({0,1}):
             return numeric.astype(int)
         return (numeric > 0).astype(int)
 
-    text = labels.astypes(str).str.strip().str.lower()
+    text = labels.astype(str).str.strip().str.lower()
     return (~text.str.contains('benign', regex=False)).astype(int)
 
 def load_dataset(

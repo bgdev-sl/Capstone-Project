@@ -73,13 +73,11 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-> ---
-> **Notes:**
->
-> - Packet capture requires **Scapy**, which needs appropriate *OS permissions*. 
-> - The *dashboard app* requires **Streamlit**.
-> 
-> ---
+!!! info Note
+    - Packet capture requires **Scapy**, which needs appropriate *OS permissions*. 
+    - The *dashboard app* requires **Streamlit**.
+
+
 
 ### (b) Smoke test with small generated dataset
 
@@ -138,10 +136,8 @@ The resulting CSV will contain the following for each model/feature config:
       --output results/predictions.csv
     ```
 
-> ---
-> **Note:** To maintain a controlled experiment, the same *dataset split*, *preprocessing config*, and *environment* should be maintained across all models.
->
-> ---
+!!! info Note
+    To maintain a controlled experiment, the same *dataset split*, *preprocessing config*, and *environment* should be maintained across all models.
 
 ## 5. Implementing and accessing the dashboard
 
@@ -151,18 +147,15 @@ The resulting CSV will contain the following for each model/feature config:
     # OR
     python scripts/create_user.py --username analyst --role ANALYST
     ```
-    > ---
-    > **Note:** This script will prompt the user to create a password, which will be stored in `configs/users.json` using *PBKDF2-HMAC-SHA256 with a random salt* for user authentication
-    >
-    > ---
+    !!! caution Note
+        This script will prompt the user to create a password, which will be stored in `configs/users.json` using *PBKDF2-HMAC-SHA256 with a random salt* for user authentication
+    
 2. Start the **Streamlit** dashboard:
     ```bash
     streamlit run app/dashboard.py
     ```
-    > ---
-    > **Note:** The dashboard is intentionally local to allow for secure experimentation boundaries and minimize security risks
-    >
-    > ---
+    !!! caution Note
+        The dashboard is intentionally local to allow for secure experimentation boundaries and minimize security risks
 
 ## 6. Notes on current prototype
 
@@ -176,10 +169,8 @@ This version should only be used in an isolated environment for security purpose
 python scripts/capture.py --count 100 --output data/packet_metadata.jsonl
 ```
 
-> ---
-> **Note:** A dedicated flow-feature adapter is still needed before live packet data can be classified by a trained model.
->
-> ---
+!!! danger Important
+    A dedicated flow-feature adapter is still needed before live packet data can be classified by a trained model.
 
 ### (b) Security factors
 
