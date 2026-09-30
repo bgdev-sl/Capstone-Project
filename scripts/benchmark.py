@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument('--reduced-k', type=int, default=None)
     parser.add_argument('--output', default='results/benchmark.csv')
     parser.add_argument('--skip-full', action='store_true')
-    parser.add_argument('--skip-reduced', action='store-true')
+    parser.add_argument('--skip-reduced', action='store_true')
     return parser.parse_args()
 
 def main():
