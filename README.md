@@ -69,14 +69,17 @@ edge_ids_prototype/
 
 ```bash
 python -m venv .venv 
+
 .venv\\Scripts\\Acitivate.ps1
+
 pip install -r requirements.txt
 ```
 
-!!! info Note
-    - Packet capture requires **Scapy**, which needs appropriate *OS permissions*. 
-    - The *dashboard app* requires **Streamlit**.
-
+>---
+> **Note**
+> - Packet capture requires **Scapy**, which needs appropriate *OS permissions*. 
+> - The *dashboard app* requires **Streamlit**.
+>---
 
 
 ### (b) Smoke test with small generated dataset
@@ -84,13 +87,19 @@ pip install -r requirements.txt
 For the prototype, a small dataset is generate. For the full experiment, **CICIoT2023** will be used for training models.
 
 ```bash
-python scripts/make_dataset.py --rows 2500 --output data/demo_flows.csv
+python scripts/make_dataset.py \
+  --rows 2500 \
+  --output data/demo_flows.csv
 ```
 
 To benchmark all four algorithms with and without feature reduction:
 
 ```bash
-python scripts/benchmark.py --dataset data/demo_flows.csv --max-rows 2500 --reduced-k 10 --output results/demo_benchmark.csv
+python scripts/benchmark.py \
+  --dataset data/demo_flows.csv \
+  --max-rows 2500 \
+  --reduced-k 10 \
+  --output results/demo_benchmark.csv
 ```
 
 The resulting CSV will contain the following for each model/feature config:
@@ -136,8 +145,12 @@ The resulting CSV will contain the following for each model/feature config:
       --output results/predictions.csv
     ```
 
-!!! info Note
-    To maintain a controlled experiment, the same *dataset split*, *preprocessing config*, and *environment* should be maintained across all models.
+>---
+> **Note**
+>
+> To maintain a controlled experiment, the same *dataset split*, *preprocessing config*, and *environment* should be maintained across all models.
+>
+>---
 
 ## 5. Implementing and accessing the dashboard
 
@@ -147,15 +160,23 @@ The resulting CSV will contain the following for each model/feature config:
     # OR
     python scripts/create_user.py --username analyst --role ANALYST
     ```
-    !!! caution Note
-        This script will prompt the user to create a password, which will be stored in `configs/users.json` using *PBKDF2-HMAC-SHA256 with a random salt* for user authentication
-    
+    >---
+    > **Note**
+    >
+    > This script will prompt the user to create a password, which will be stored in `configs/users.json` using *PBKDF2-HMAC-SHA256 with a random salt* for user authentication
+    >
+    >---
+
 2. Start the **Streamlit** dashboard:
     ```bash
     streamlit run app/dashboard.py
     ```
-    !!! caution Note
-        The dashboard is intentionally local to allow for secure experimentation boundaries and minimize security risks
+    >---
+    > **Note**
+    > 
+    > The dashboard is intentionally local to allow for secure experimentation boundaries and minimize security risks
+    >
+    >---
 
 ## 6. Notes on current prototype
 
@@ -169,8 +190,12 @@ This version should only be used in an isolated environment for security purpose
 python scripts/capture.py --count 100 --output data/packet_metadata.jsonl
 ```
 
-!!! danger Important
-    A dedicated flow-feature adapter is still needed before live packet data can be classified by a trained model.
+> ---
+> **Important**
+>
+> A dedicated flow-feature adapter is still needed before live packet data can be classified by a trained model.
+>
+> ---
 
 ### (b) Security factors
 
