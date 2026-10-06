@@ -23,6 +23,8 @@ class PreprocessMetadata:
 # Fit and apply one shared feature transformation to all model types
 class FeaturePipeline:
     def __init__(self, feature_reduction_enabled: bool = False, k: int = 64):
+        if feature_reduction_enabled and k <= 0:
+            raise ValueError('Feature-reduction k must be greater than zero.')
         self.feature_reduction_enabled = feature_reduction_enabled
         self.k = k
         self.preprocessor: ColumnTransformer | None = None
@@ -39,10 +41,7 @@ class FeaturePipeline:
         ]
         categorical_steps = [
             ('imputer', SimpleImputer(strategy='most_frequent')),
-            (
-                'onehot',
-                OneHotEncoder(handle_unknown='ignore', sparse_output=True)
-            )
+            ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=True))
         ]
 
         transformers: list[tuple[str, Pipeline, list[str]]] = []
