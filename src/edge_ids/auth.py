@@ -26,7 +26,7 @@ def _verify_password(password: str, stored: str) -> bool:
     actual = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, int(iterations))
     return hmac.compare_digest(actual, expected)
 
-# Create or update one local demo account
+# Create or update local account
 def create_user_store(path: str | Path, username: str, password: str, role: str) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)

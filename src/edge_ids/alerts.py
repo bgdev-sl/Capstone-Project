@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import json
+import hashlib 
 import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -22,7 +23,11 @@ class AlertManager:
         log_dir = Path(log_dir)
         log_dir.mkdir(parents=True, exist_ok=True)
         self.confidence_threshold = confidence_threshold
-        self.logger = logging.getLogger('edge_ids.alerts')
+
+        # Prevent local app instances from accidentally sharing file handlers
+        logger_key = hashlib.sha256(str(log_dir.resolve()).encode('utf-8')).hexdigest()[:12]
+
+        self.logger = logging.getLogger(f'edge_ids.alerts.{logger_key}')
         self.logger.setLevel(logging.INFO)
         self.logger.propagate = False
 

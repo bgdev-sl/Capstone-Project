@@ -1,0 +1,26 @@
+name: integration testing
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubumtu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Python Setup
+        uses: actions/setup-python@v4
+        with: 
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install Dependencies
+        run: python -m pip install -e '.[dev]'
+
+      - name: Testing
+        run: python -m pytest -q

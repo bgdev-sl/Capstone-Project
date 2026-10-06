@@ -41,10 +41,12 @@ edge_ids_prototype/
 │   ├── create_user.py
 │   ├── make_dataset.py
 │   ├── run_prediction.py
-│   └── train_models.py
+│   ├── train_models.py
+│   └── validate.py
 ├── src/edge_ids/
 │   ├── alerts.py
 │   ├── auth.py
+│   ├── config_manager.py
 │   ├── config.py
 │   ├── data.py
 │   ├── evaluation.py
@@ -53,10 +55,11 @@ edge_ids_prototype/
 │   ├── models.py
 │   ├── monitoring.py
 │   ├── pipeline.py
-│   ├── preprocess.py
+│   ├── preprocessing.py
 │   ├── registry.py
 │   ├── traffic.py
-│   └── training.py
+│   ├── training.py
+│   └── validation.py
 ├── tests/
 │   └── test_core.py
 ├── pyproject.toml
@@ -218,3 +221,10 @@ This current software prototype does not implement energy measurement. To achiev
 5. Implement PowerJoular (or other power monitoring tool) and designate monitoring for the IoT VM.
 6. Run the same inference workload repeatedly and record median/p95 latency, CPU utilization, RAM usage, and energy consumption.
 7. Export results for statistical analysis and visualization.
+
+## V 0.2 Notes:
+
+- Adds extensive unit testing in `tests/test_core.py`
+- Adds validation for benchmark results in `scripts/validate.py` and `src/validation.py` 
+- Adds controls to limit configuration modification via the dashboard with `src/config_manager.py`
+- Adds CI testing with `workflows/ci.yml` that runs unit tests before committing changes.
