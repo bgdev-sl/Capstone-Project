@@ -4,5 +4,6 @@
     "python.analysis.extraPaths": [
         "./features/src",
         "./src"
-    ]
+    ],
+    "python.REPL.enableREPLSmartSend": false
 }

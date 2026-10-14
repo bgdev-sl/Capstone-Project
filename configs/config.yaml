@@ -50,3 +50,6 @@ security:
   alert_confidence_threshold: 0.80
   log_rotation_mb: 5
   log_backup_count: 3
+
+evaluation:
+  inference_repeats: 20

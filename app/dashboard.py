@@ -111,9 +111,16 @@ else:
 st.subheader("Recent Alert Log")
 alert_path = ROOT / CONFIG.get("paths", {}).get("log_dir", "logs") / "alerts.jsonl"
 if alert_path.exists():
+    alert_rows = []
     with alert_path.open("r", encoding="utf-8") as handle:
-        lines = handle.readlines()[-20:]
-    if lines:
-        st.code("".join(lines), language="json")
+        for line in handle.readlines()[-20:]:
+            try:
+                alert_rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    if alert_rows:
+        st.dataframe(pd.DataFrame(alert_rows), use_container_width=True)
+    else:
+        st.caption("The alert log has no valid records yet.")
 else:
     st.caption("No alerts have been generated yet.")

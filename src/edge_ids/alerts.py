@@ -1,17 +1,17 @@
-# Alert generation and logging
+# Alert generation and rotating logging
 
 from __future__ import annotations
 import json
-import hashlib 
+import hashlib
 import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Iterable 
+from typing import Iterable
 
-# Serialize log records as one JSON object
+# Serialize log records as JSON objects
 class JsonLineFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
-        payload = getattr(record, 'payload', None) 
+        payload = getattr(record, 'payload', None)
         if payload is None:
             payload = {'message': record.getMessage()}
         payload = {'level': record.levelname, 'logger': record.name, **payload}
@@ -24,9 +24,7 @@ class AlertManager:
         log_dir.mkdir(parents=True, exist_ok=True)
         self.confidence_threshold = confidence_threshold
 
-        # Prevent local app instances from accidentally sharing file handlers
         logger_key = hashlib.sha256(str(log_dir.resolve()).encode('utf-8')).hexdigest()[:12]
-
         self.logger = logging.getLogger(f'edge_ids.alerts.{logger_key}')
         self.logger.setLevel(logging.INFO)
         self.logger.propagate = False
@@ -36,7 +34,7 @@ class AlertManager:
                 log_dir / 'alerts.jsonl',
                 maxBytes=rotation_mb * 1024 * 1024,
                 backupCount=backup_count,
-                encoding='utf-8'
+                encoding='utf-8',
             )
             handler.setFormatter(JsonLineFormatter())
             self.logger.addHandler(handler)
@@ -44,7 +42,7 @@ class AlertManager:
     def emit(self, alert: dict) -> None:
         self.logger.info('alert', extra={'payload': alert})
 
-    # Create alert records
+# Create alert records for malicious predictions
     def inspect_predictions(self, predictions: Iterable[dict]) -> list[dict]:
         alerts = []
         for item in predictions:
@@ -55,9 +53,8 @@ class AlertManager:
                     'type': 'intrusion_detected',
                     'confidence': confidence,
                     'model_version': item.get('model_version'),
-                    'timestamp_utc': item.get('timestamp_utc')
+                    'timestamp_utc': item.get('timestamp_utc'),
                 }
                 self.emit(alert)
                 alerts.append(alert)
         return alerts
-    

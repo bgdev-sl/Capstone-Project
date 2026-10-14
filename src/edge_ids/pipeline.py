@@ -1,9 +1,10 @@
-# Tying the architecture modules together
+# Pipeline tying the modules together.
 
 from __future__ import annotations
 from pathlib import Path
-from typing import Any 
+from typing import Any
 import pandas as pd
+
 from .alerts import AlertManager
 from .config import ensure_directories
 from .data import load_dataset
@@ -23,7 +24,7 @@ class EdgeIDSApplication:
             self.root / paths.get('log_dir', 'logs'),
             confidence_threshold=security.get('alert_confidence_threshold', 0.80),
             rotation_mb=security.get('log_rotation_mb', 5),
-            backup_count=security.get('log_backup_count', 3)
+            backup_count=security.get('log_backup_count', 3),
         )
 
     def available_models(self) -> list[dict[str, Any]]:
@@ -33,13 +34,26 @@ class EdgeIDSApplication:
         bundle, _manifest = self.model_registry.load(model_version, verify_integrity=True)
         return InferenceEngine(bundle, model_version, self.alert_manager)
 
-    # Predict using a CSV containing same features as training set
     def predict_csv(self, model_version: str, path: str | Path) -> tuple[pd.DataFrame, dict[str, Any]]:
-        frame = pd.read_csv(path)
+        return self.predict_frame(model_version, pd.read_csv(path))
+
+    def predict_frame(self, model_version: str, frame: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, Any]]:
+        from .data import LABEL_CANDIDATES
+
+        if frame.empty:
+            raise ValueError('Cannot perform inference on an empty dataset.')
+        frame = frame.copy()
         label_column = self.config.get('data', {}).get('label_column')
-        if label_column and label_column in frame.columns:
-            frame = frame.drop(columns=[label_column])
+        possible_labels = set(LABEL_CANDIDATES)
+        if label_column:
+            possible_labels.add(label_column)
+        removable = [column for column in frame.columns if column in possible_labels]
+        if removable:
+            frame = frame.drop(columns=removable)
         for column in self.config.get('data', {}).get('drop_columns', []):
             if column in frame.columns:
                 frame = frame.drop(columns=[column])
+
+        if frame.empty or len(frame.columns) == 0:
+            raise ValueError('No usable feature columns were supplied for inference.')
         return self.load_model(model_version).predict(frame)
