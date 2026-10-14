@@ -1,22 +1,34 @@
 # Versioned model storage and integrity verification
 
 from __future__ import annotations
-
 import json
+import re
 from datetime import datetime, timezone
-from pathlib import Path 
-from typing import Any 
-import joblib 
+from pathlib import Path
+from typing import Any
+import joblib
+
 from .integrity import sha256_file, verify_sha256
 
-# Store models, version metadata, and SHA-256 integrity info
-class ModelRegistry: 
+# Store models with version, metadata, and SHA-256 hash
+class ModelRegistry:
     def __init__(self, model_dir: str | Path):
         self.model_dir = Path(model_dir)
         self.model_dir.mkdir(parents=True, exist_ok=True)
 
-    def save(self, model_version: str, bundle: dict[str, Any], metadata: dict[str, Any]) -> dict[str, Any]:
-        model_path =self.model_dir / f'{model_version}.joblib'
+    @staticmethod
+    def _validate_version(model_version: str) -> None:
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,99}", model_version) or ".." in model_version:
+            raise ValueError("Model version must be a simple identifier (letters, digits, '.', '_' or '-').")
+
+    def save(
+        self,
+        model_version: str,
+        bundle: dict[str, Any],
+        metadata: dict[str, Any],
+    ) -> dict[str, Any]:
+        self._validate_version(model_version)
+        model_path = self.model_dir / f'{model_version}.joblib'
         manifest_path = self.model_dir / f'{model_version}.json'
 
         joblib.dump(bundle, model_path, compress=3)
@@ -28,10 +40,11 @@ class ModelRegistry:
             'artifact': model_path.name,
             'sha256': digest,
             'artifact_size_bytes': model_path.stat().st_size,
-            'metadata': metadata
+            'metadata': metadata,
         }
         manifest_path.write_text(json.dumps(manifest, indent=2), encoding='utf-8')
-        return manifest 
+        return manifest
+
     def list_models(self) -> list[dict[str, Any]]:
         manifests = []
         for path in sorted(self.model_dir.glob('*.json')):
@@ -39,6 +52,7 @@ class ModelRegistry:
         return manifests
 
     def load(self, model_version: str, verify_integrity: bool = True) -> tuple[dict[str, Any], dict[str, Any]]:
+        self._validate_version(model_version)
         manifest_path = self.model_dir / f'{model_version}.json'
         model_path = self.model_dir / f'{model_version}.joblib'
         if not manifest_path.exists() or not model_path.exists():
@@ -48,4 +62,4 @@ class ModelRegistry:
         if verify_integrity and not verify_sha256(model_path, manifest['sha256']):
             raise RuntimeError(f"Integrity verification failed for model '{model_version}'.")
 
-        return joblib.load(model_path), manifest 
+        return joblib.load(model_path), manifest
