@@ -13,11 +13,11 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 
-from edge_ids.config import load_config, ensure_directories 
-from edge_ids.data import load_dataset  
-from edge_ids.models import SUPPORTED_MODELS
-from edge_ids.registry import ModelRegistry
-from edge_ids.training import train_one 
+from edge_ids.config import load_config, ensure_directories  # noqa: E402
+from edge_ids.data import load_dataset  # noqa: E402
+from edge_ids.models import SUPPORTED_MODELS  # noqa: E402
+from edge_ids.registry import ModelRegistry  # noqa: E402
+from edge_ids.training import train_one  # noqa: E402
 
 
 def parse_args():

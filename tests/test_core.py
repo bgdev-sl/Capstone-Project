@@ -1,4 +1,6 @@
-# Unit tests for the prototype's core modules.
+# Unit tests for core modules
+# Primarilty white-box unit testing: individual modules, branches, and error paths are exercised in isolation using small deterministic fixtures.
+# A few tests also behave as black-box contract tests by checking the public outputs of authentication, preprocessing, inference, and validation services
 
 from __future__ import annotations
 import json
@@ -93,8 +95,8 @@ def test_all_model_factories_are_supported():
         'models': {
             'decision_tree': {},
             'random_forest': {'n_estimators': 5, 'n_jobs': 1},
-            'xgboost': {'n_estimators': 5},
-            'mlp': {'max_iter': 5, 'batch_size': 8},
+            'xgboost': {'n_estimators': 5, 'n_jobs': 1},
+            'mlp': {'max_iter': 5, 'batch_size': 8}
         }
     }
     for name in SUPPORTED_MODELS:
@@ -152,7 +154,7 @@ def test_authentication_and_rbac_store(tmp_path):
 
     assert authenticate(user_file, 'admin', 'correct-password') == {
         'username': 'admin',
-        'role': 'ADMIN',
+        'role': 'ADMIN'
     }
     assert authenticate(user_file, 'admin', 'wrong-password') is None
     assert authenticate(user_file, 'missing', 'correct-password') is None
@@ -181,7 +183,7 @@ def test_alert_manager_only_alerts_confident_malicious_predictions(tmp_path):
         [
             {'prediction': 1, 'confidence': 0.95, 'model_version': 'v1', 'timestamp_utc': 't1'},
             {'prediction': 1, 'confidence': 0.50, 'model_version': 'v1', 'timestamp_utc': 't2'},
-            {'prediction': 0, 'confidence': 0.99, 'model_version': 'v1', 'timestamp_utc': 't3'},
+            {'prediction': 0, 'confidence': 0.99, 'model_version': 'v1', 'timestamp_utc': 't3'}
         ]
     )
 
@@ -194,7 +196,7 @@ def test_config_manager_whitelists_updates(tmp_path):
     path = tmp_path / 'config.yaml'
     path.write_text(
         'security:\n  alert_confidence_threshold: 0.8\nfeature_reduction:\n  k: 64\n',
-        encoding='utf-8',
+        encoding='utf-8'
     )
     config = update_config_value(path, 'feature_reduction.k', 10)
     assert config['feature_reduction']['k'] == 10
@@ -220,7 +222,7 @@ def test_benchmark_output_validation_accepts_valid_frame():
             'output_feature_count': [19],
             'train_rows': [100],
             'test_rows': [25],
-            'model_size_bytes': [5000],
+            'model_size_bytes': [5000]
         }
     )
     validate_benchmark_frame(frame)
@@ -242,7 +244,7 @@ def test_benchmark_output_validation_rejects_bad_metric():
             'output_feature_count': [19],
             'train_rows': [100],
             'test_rows': [25],
-            'model_size_bytes': [5000],
+            'model_size_bytes': [5000]
         }
     )
     with pytest.raises(OutputValidationError, match='between 0 and 1'):
@@ -272,14 +274,14 @@ def test_benchmark_csv_validation_reads_valid_csv(tmp_path):
             'rss_delta_mb': [1.0],
             'output_feature_count': [12],
             'train_rows': [100],
-            'test_rows': 25,
+            'test_rows': [25],
             'model_size_bytes': [5000]
         }
     ).to_csv(path, index=False)
     frame = validate_benchmark_csv(path)
     assert len(frame) == 1
 
-def test_model_registry_rejects_path_like_version(tmp_path):
+def test_model_registry_rejects_path_like_versions(tmp_path):
     registry = ModelRegistry(tmp_path / 'models')
     with pytest.raises(ValueError, match='simple identifier'):
         registry.load('../outside')

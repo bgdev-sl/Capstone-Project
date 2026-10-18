@@ -9,6 +9,7 @@ from .alerts import AlertManager
 from .evaluation import safe_confidence
 from .monitoring import ResourceMonitor
 
+# Run a registered model against flow features
 class InferenceEngine:
     def __init__(self, bundle: dict[str, Any], model_version: str, alert_manager: AlertManager | None = None):
         self.model = bundle['model']
@@ -16,10 +17,10 @@ class InferenceEngine:
         self.model_version = model_version
         self.alert_manager = alert_manager
 
-# Predict benign/malicious 
+    # Predict benign/malicious labels and return resource measurements
     def predict(self, frame: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, Any]]:
         if frame.empty:
-            raise ValueError('Cannot perform inference on an empty DataFrame.')
+            raise ValueError('Cannot perform inference on an empty DataFrame')
 
         monitor = ResourceMonitor()
 

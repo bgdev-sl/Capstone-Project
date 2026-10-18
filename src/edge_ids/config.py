@@ -1,4 +1,5 @@
 # Config loading
+# Delibreately keeps config external to code so the same software can be used for any compatible flow dataset
 
 from __future__ import annotations
 from pathlib import Path
@@ -6,7 +7,7 @@ from typing import Any
 import yaml
 
 # Load a YAML config file and validate structure
-def load_config(path: str| Path) -> dict[str, Any]:
+def load_config(path: str | Path) -> dict[str, Any]:
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f'Config file not found: {path}')
@@ -16,6 +17,7 @@ def load_config(path: str| Path) -> dict[str, Any]:
 
     if not isinstance(config, dict):
         raise ValueError('Config file must contain a YAML mapping/object.')
+
     return config
 
 # create configured runtime directories when they do not exist

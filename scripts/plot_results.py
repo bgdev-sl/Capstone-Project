@@ -41,7 +41,7 @@ def main() -> None:
 
     ax.set_xscale('log')
     ax.set_xlabel('Warmed batch inference latency (ms per sample, log scale)')
-    ax.set_ylabel("F1 score (malicious class)")
+    ax.set_ylabel('F1 score (malicious class)')
     ax.set_title('Edge IDS prototype: detection quality vs inference latency')
     ax.grid(True, which='both', alpha=0.25)
     fig.tight_layout()

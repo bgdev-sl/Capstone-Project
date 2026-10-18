@@ -1,11 +1,20 @@
+# ML model building mechanisms for the models defined in scope of research
+
 from __future__ import annotations
 from typing import Any
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 
-SUPPORTED_MODELS = ('decision_tree', 'random_forest', 'xgboost', 'mlp')
 
+SUPPORTED_MODELS = (
+    'decision_tree',
+    'random_forest',
+    'xgboost',
+    'mlp'
+)
+
+# Create supported model
 def build_model(name: str, config: dict[str, Any], random_state: int = 42):
     name = name.lower().strip()
     model_config = config.get('models', {}).get(name, {})
@@ -29,8 +38,8 @@ def build_model(name: str, config: dict[str, Any], random_state: int = 42):
     if name == 'xgboost':
         try:
             from xgboost import XGBClassifier
-        except ImportError as exc:
-            raise RuntimeError('xgboost is required for XGBoost model.') from exc 
+        except ImportError as exc:  # pragma: no cover - import guard
+            raise RuntimeError('xgboost is required for the XGBoost model') from exc
 
         return XGBClassifier(
             n_estimators=model_config.get('n_estimators', 200),
@@ -38,6 +47,7 @@ def build_model(name: str, config: dict[str, Any], random_state: int = 42):
             learning_rate=model_config.get('learning_rate', 0.10),
             subsample=model_config.get('subsample', 0.80),
             colsample_bytree=model_config.get('colsample_bytree', 0.80),
+            n_jobs=model_config.get('n_jobs', -1),
             objective='binary:logistic',
             eval_metric='logloss',
             tree_method='hist',

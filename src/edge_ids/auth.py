@@ -1,5 +1,10 @@
 # Minimal local authentication/RBAC helper for the prototype dashboard
 
+# Intentionally not production level:
+# It is meant to demonstrate RBAC while keeping creds local.
+# Passwords are hashed using PBKDF2-HMAC-SHA256 with a random salt.
+# Software is meant for testing performance and resource consumption of different models 
+
 from __future__ import annotations
 import base64
 import hashlib
@@ -17,7 +22,7 @@ def _hash_password(password: str, salt: bytes | None = None) -> str:
     return f'pbkdf2_sha256${ITERATIONS}${base64.b64encode(salt).decode()}${base64.b64encode(digest).decode()}'
 
 def _verify_password(password: str, stored: str) -> bool:
-    scheme, iterations, salt_b64, digest_b64 = stored.split("$")
+    scheme, iterations, salt_b64, digest_b64 = stored.split('$')
     if scheme != 'pbkdf2_sha256':
         return False
     salt = base64.b64decode(salt_b64)
@@ -40,6 +45,7 @@ def create_user_store(path: str | Path, username: str, password: str, role: str)
     users[username] = {'password_hash': _hash_password(password), 'role': role}
     path.write_text(json.dumps(users, indent=2), encoding='utf-8')
 
+# Return authenticated user's identity and role, or None on failure
 def authenticate(path: str | Path, username: str, password: str) -> dict[str, str] | None:
     path = Path(path)
     if not path.exists():

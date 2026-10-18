@@ -1,14 +1,17 @@
+#!/usr/bin/env python3
+
 # validate the structure and value ranges
 
 from __future__ import annotations
 import argparse
-from pathlib import Path 
+from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 
-from edge_ids.validation import validate_benchmark_csv
+from edge_ids.validation import validate_benchmark_csv  # noqa: E402
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)

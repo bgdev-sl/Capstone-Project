@@ -4,7 +4,7 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-# Compute SHA-256 for a file
+# Compute SHA-256 for a file without loading whole file into memory
 def sha256_file(path: str | Path, chunk_size: int = 1024 * 1024) -> str:
     path = Path(path)
     digest = hashlib.sha256()
@@ -16,4 +16,3 @@ def sha256_file(path: str | Path, chunk_size: int = 1024 * 1024) -> str:
 # Verify file against a stored SHA-256 digest
 def verify_sha256(path: str | Path, expected_hash: str) -> bool:
     return sha256_file(path).lower() == expected_hash.lower()
-

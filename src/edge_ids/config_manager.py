@@ -1,9 +1,9 @@
 # Configuration update control
 
 from __future__ import annotations
-from pathlib import Path 
-from typing import Any 
-import yaml 
+from pathlib import Path
+from typing import Any
+import yaml
 
 ALLOWED_UPDATES = {
     'security.alert_confidence_threshold',
@@ -11,9 +11,9 @@ ALLOWED_UPDATES = {
     'data.test_size'
 }
 
-# Update config of an explicitly whitelisted option
+# Update one whitelisted setting and return new config
+# Restricting editable keys minimizes risk of unintended changes that could affect system functionality, while still demonstrating control from dashboard
 def update_config_value(path: str | Path, key: str, value: Any) -> dict[str, Any]:
-
     if key not in ALLOWED_UPDATES:
         raise ValueError(f"Configuration key '{key}' is not editable through the dashboard.")
 
@@ -22,7 +22,7 @@ def update_config_value(path: str | Path, key: str, value: Any) -> dict[str, Any
     section, name = key.split('.', 1)
     config.setdefault(section, {})[name] = value
 
-    # Keep a simple rollback point for local experimentation.
+    # Keep a simple rollback point
     backup = path.with_suffix(path.suffix + '.bak')
     backup.write_text(path.read_text(encoding='utf-8'), encoding='utf-8')
     path.write_text(yaml.safe_dump(config, sort_keys=False), encoding='utf-8')

@@ -1,11 +1,16 @@
-from __future__ import annotations
-import json 
-from dataclasses import asdict, dataclass 
-from datetime import datetime, timezone 
-from pathlib import Path 
-from typing import Callable 
-import pandas as pd 
 
+# Traffic collection adapters
+# Because models are trained from flow datasets, packet capture is kept seperate from feature extraction
+
+from __future__ import annotations
+import json
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Callable
+import pandas as pd
+
+# Privacy-minimized packet metadata; payload bytes are intentionally omitted
 @dataclass
 class PacketSummary:
     timestamp_utc: str
@@ -16,25 +21,28 @@ class PacketSummary:
     protocol: str
     packet_length: int
 
+# Read flow records from a prepared CSV file for reproduction
 class CsvFlowCollector:
     def read(self, path: str | Path) -> pd.DataFrame:
         return pd.read_csv(path)
 
+# Capture packet metadata without retaining payloads
+# A seperate feature-adapter is required before records cab ne passed to trained models
 class ScapyPacketCollector:
     def __init__(self, output_path: str | Path):
         self.output_path = Path(output_path)
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    def capture(self, packet_count:int = 100, iface: str | None = None, bpf_filter: str | None = None) -> int:
+    def capture(self, packet_count: int = 100, iface: str | None = None, bpf_filter: str | None = None) -> int:
         try:
-            from scapy.all import IP, TCP, UDP, sniff 
-        except ImportError as exc:
-            raise RuntimeError("Scapy is not installed.") from exc 
+            from scapy.all import IP, TCP, UDP, sniff
+        except ImportError as exc:  # pragma: no cover - optional dependency
+            raise RuntimeError('Scapy is not installed. Install the capture extra before using packet capture.') from exc
 
         def summarize(packet):
             src_ip = dst_ip = None
-            src_port = dst_port = None 
-            protocol = "OTHER"
+            src_port = dst_port = None
+            protocol = 'OTHER'
             if IP in packet:
                 src_ip = packet[IP].src
                 dst_ip = packet[IP].dst
@@ -55,11 +63,10 @@ class ScapyPacketCollector:
                 src_port=src_port,
                 dst_port=dst_port,
                 protocol=protocol,
-                packet_length=len(packet)
+                packet_length=len(packet),
             )
-            with self.output_path.open('a', encoding='utf-8') as handle:
-                handle.write(json.dumps(asdict(record)) + '\n')
+            with self.output_path.open("a", encoding='utf-8') as handle:
+                handle.write(json.dumps(asdict(record)) + "\n")
 
         sniff(count=packet_count, iface=iface, filter=bpf_filter, prn=summarize, store=False)
-        return packet_count 
-    
+        return packet_count

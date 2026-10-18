@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 from typing import Any
+
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, Field
@@ -49,7 +50,7 @@ def create_app(root: str | Path | None = None, config_path: str | Path | None = 
 
     api = FastAPI(
         title='Edge IDS Research API',
-        version='0.3.0',
+        version='1.0.0',
         description='Experimental API for integrity-checked ML-based intrusion detection.',
     )
     api.state.root = app_root
@@ -78,6 +79,7 @@ def create_app(root: str | Path | None = None, config_path: str | Path | None = 
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='ADMIN role required.')
         return identity
 
+    # Liveness endpoint; does not disclose model or user info
     @api.get('/health', tags=['system'])
     def health() -> dict[str, Any]:
         return {'status': 'ok', 'service': 'edge-ids-api', 'research_prototype': True}
@@ -86,6 +88,7 @@ def create_app(root: str | Path | None = None, config_path: str | Path | None = 
     def list_models(identity: dict[str, str] = Depends(current_user)) -> dict[str, Any]:
         return {'models': api.state.ids_service.available_models()}
 
+    # Classify one bounded batch and return predictions with resource consumption
     @api.post('/api/v1/predict', tags=['inference'])
     def predict(
         payload: PredictionRequest,
@@ -100,15 +103,22 @@ def create_app(root: str | Path | None = None, config_path: str | Path | None = 
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except RuntimeError as exc:
+            # Includes a rejected model artifact whose SHA-256 does not match.
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
+        # Keep the REST response data-minimal: callers receive classification results and model metadata, not a second copy of potentially sensitive network-flow input features.
+        # The local dashboard may still show its in-memory input rows alongside predictions for the analyst workflow.
+        response_columns = [
+            'prediction', 'class', 'confidence', 'model_version', 'timestamp_utc'
+        ]
+        safe_predictions = predictions.loc[:, response_columns]
         return {
             'model_version': payload.model_version,
-            'count': len(predictions),
+            'count': len(safe_predictions),
             'resource_metrics': resources,
-            'predictions': predictions.to_dict(orient='records'),
+            'predictions': safe_predictions.to_dict(orient='records'),
         }
 
     @api.get('/api/v1/alerts', tags=['alerts'])
@@ -118,14 +128,16 @@ def create_app(root: str | Path | None = None, config_path: str | Path | None = 
     ) -> dict[str, Any]:
         records: list[dict[str, Any]] = []
         if api.state.log_file.exists():
-            with api.state.log_file.open("r", encoding="utf-8") as handle:
+            with api.state.log_file.open('r', encoding='utf-8') as handle:
                 for line in handle:
                     try:
                         records.append(json.loads(line))
                     except json.JSONDecodeError:
+                        # Ignore a partially written/corrupt line rather than failing the endpoint.
                         continue
         return {'alerts': records[-limit:], 'count': min(len(records), limit)}
 
+    # Update a whitelisted setting, take backup, and refresh service
     @api.patch('/api/v1/admin/config', tags=['administration'])
     def update_config(
         payload: ConfigUpdateRequest,
@@ -156,6 +168,5 @@ def create_app(root: str | Path | None = None, config_path: str | Path | None = 
         return {'updated': payload.key, 'value': value, 'backup_created': True}
 
     return api
-
 
 app = create_app()
