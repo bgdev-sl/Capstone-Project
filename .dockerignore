@@ -6,10 +6,10 @@ __pycache__/
 .env
 configs/users.json
 configs/*.yaml.bak
-data/*.csv
 models/*.joblib
 models/*.json
 logs/*.log
 logs/*.jsonl
+raw_data/*
 results/*.csv
 results/*.json
