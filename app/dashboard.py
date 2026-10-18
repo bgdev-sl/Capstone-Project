@@ -1,13 +1,13 @@
-# Basic Streamlit Dashboard
-
 from __future__ import annotations
 import json
+import os
 from pathlib import Path
 import sys
 import pandas as pd
 import streamlit as st
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(os.getenv("EDGE_IDS_ROOT", str(Path(__file__).resolve().parents[1]))).resolve()
+CONFIG_PATH = Path(os.getenv("EDGE_IDS_CONFIG", str(ROOT / "configs" / "config.yaml"))).resolve()
 sys.path.insert(0, str(ROOT / "src"))
 
 from edge_ids.auth import authenticate  # noqa: E402
@@ -15,7 +15,7 @@ from edge_ids.config import load_config  # noqa: E402
 from edge_ids.config_manager import update_config_value  # noqa: E402
 from edge_ids.pipeline import EdgeIDSApplication  # noqa: E402
 
-CONFIG = load_config(ROOT / "configs/config.yaml")
+CONFIG = load_config(CONFIG_PATH)
 APP = EdgeIDSApplication(CONFIG, ROOT)
 USER_FILE = ROOT / CONFIG.get("paths", {}).get("user_file", "configs/users.json")
 
@@ -77,18 +77,24 @@ if upload is not None:
     st.dataframe(frame.head(10), use_container_width=True)
 
     if st.button("Run inference"):
-        temp_input = ROOT / "results" / "_dashboard_input.csv"
-        temp_input.parent.mkdir(parents=True, exist_ok=True)
-        frame.to_csv(temp_input, index=False)
         try:
-            predictions, resources = APP.predict_csv(selected, temp_input)
+            # Pass the uploaded frame directly through the shared service layer;
+            # avoid writing potentially sensitive input traffic to a temporary CSV.
+            predictions, resources = APP.predict_frame(selected, frame)
             st.success("Inference complete.")
-            m1, m2, m3, m4 = st.columns(4)
+            m1, m2, m3, m4, m5 = st.columns(5)
             m1.metric("Rows", len(predictions))
             m2.metric("Malicious", int(predictions["prediction"].sum()))
-            m3.metric("Latency ms/sample", f"{resources['latency_ms_per_sample']:.3f}")
-            m4.metric("CPU %", f"{resources['cpu_percent']:.1f}")
+            m3.metric("Latency ms/sample", f"{resources['latency_ms_per_sample']:.4f}")
+            m4.metric("Throughput rows/sec", f"{resources['throughput_samples_per_second']:.1f}")
+            m5.metric("Process RSS MB", f"{resources['rss_after_mb']:.1f}")
             st.dataframe(predictions, use_container_width=True)
+            st.download_button(
+                "Download predictions as CSV",
+                data=predictions.to_csv(index=False).encode("utf-8"),
+                file_name="edge_ids_predictions.csv",
+                mime="text/csv",
+            )
         except Exception as exc:
             st.error(f"Inference failed: {exc}")
 
@@ -100,7 +106,7 @@ if user["role"] == "ADMIN":
     )
     if st.button("Save threshold"):
         try:
-            update_config_value(ROOT / "configs/config.yaml", "security.alert_confidence_threshold", float(new_threshold))
+            update_config_value(CONFIG_PATH, "security.alert_confidence_threshold", float(new_threshold))
             st.success("Configuration updated. Restarting the dashboard state.")
             st.rerun()
         except Exception as exc:

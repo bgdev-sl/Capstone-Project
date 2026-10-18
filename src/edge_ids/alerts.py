@@ -24,6 +24,7 @@ class AlertManager:
         log_dir.mkdir(parents=True, exist_ok=True)
         self.confidence_threshold = confidence_threshold
 
+        # Give each log destination its own logger so test runs and multiple local application instances do not accidentally share file handlers
         logger_key = hashlib.sha256(str(log_dir.resolve()).encode('utf-8')).hexdigest()[:12]
         self.logger = logging.getLogger(f'edge_ids.alerts.{logger_key}')
         self.logger.setLevel(logging.INFO)

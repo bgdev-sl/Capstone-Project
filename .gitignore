@@ -1,0 +1,24 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+env/
+*.egg-info/
+.DS_Store
+.env
+
+# Local/generated data
+/data/*.csv
+/data/*.jsonl
+/models/*.joblib
+/models/*.json
+/logs/*.log
+/logs/*.jsonl
+/results/*.csv
+/results/*.json
+
+# Local secrets
+configs/users.json
+
+# Local configuration rollback copy
+configs/*.yaml.bak

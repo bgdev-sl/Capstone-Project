@@ -3,7 +3,14 @@
 from __future__ import annotations
 from typing import Any
 import numpy as np
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, precision_score, recall_score
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+)
 
 # Return overall binary metrics, confusion matrix, and class report
 def classification_metrics(y_true, y_pred) -> dict[str, Any]:
@@ -26,6 +33,8 @@ def safe_confidence(model, transformed_X, predictions) -> np.ndarray:
     if hasattr(model, 'decision_function'):
         scores = model.decision_function(transformed_X)
         if np.ndim(scores) == 1:
+            # Convert signed scores to a simple [0, 1]
             return 1.0 / (1.0 + np.exp(-np.abs(scores)))
         return np.max(scores, axis=1)
+
     return np.ones(len(predictions), dtype=float)

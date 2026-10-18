@@ -1,4 +1,4 @@
-# Pipeline tying the modules together.
+# High-level app service tying the modules together
 
 from __future__ import annotations
 from pathlib import Path
@@ -34,9 +34,11 @@ class EdgeIDSApplication:
         bundle, _manifest = self.model_registry.load(model_version, verify_integrity=True)
         return InferenceEngine(bundle, model_version, self.alert_manager)
 
+    # Predict using a CSV containing the raw feature columns
     def predict_csv(self, model_version: str, path: str | Path) -> tuple[pd.DataFrame, dict[str, Any]]:
         return self.predict_frame(model_version, pd.read_csv(path))
 
+    # Run inference on an in-memory frame, shared by UI and HTTP API
     def predict_frame(self, model_version: str, frame: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, Any]]:
         from .data import LABEL_CANDIDATES
 

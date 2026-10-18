@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.git/
+*.py[cod]
+.env
+configs/users.json
+configs/*.yaml.bak
+data/*.csv
+models/*.joblib
+models/*.json
+logs/*.log
+logs/*.jsonl
+results/*.csv
+results/*.json

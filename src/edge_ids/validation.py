@@ -3,9 +3,9 @@
 #   - values are plausible
 
 from __future__ import annotations
-from pathlib import Path 
-from typing import Iterable 
-import pandas as pd 
+from pathlib import Path
+from typing import Iterable
+import pandas as pd
 
 REQUIRED_BENCHMARK_COLUMNS = {
     'model',
@@ -25,29 +25,29 @@ REQUIRED_BENCHMARK_COLUMNS = {
     'model_size_bytes'
 }
 
-# Raise when output does not satisfy expected schema
 class OutputValidationError(ValueError):
-    pass
+    """Raised when an experiment output does not satisfy the expected schema."""
 
-    # validate classification metric (should be between 0 and 1)
+# validate classification metric (should be between 0 and 1)
 def validate_metric_range(name: str, value: float) -> None:
     if not 0.0 <= float(value) <= 1.0:
-        raise OutputValidationError(f'{name} must be between 0 and 1; received {value!r}')
+        raise OutputValidationError(f'{name} must be between 0 and 1; received {value!r}.')
 
-    # Validate schema and basic value ranges
-def validate_benchmark_frame(frame: pd.DataFrame, expected_models: Iterable[str] = ('decision_tree', 'random_forest', 'xgboost', 'mlp')) -> None:
+# Validate schema and basic value ranges
+def validate_benchmark_frame(
+    frame: pd.DataFrame,
+    expected_models: Iterable[str] = ('decision_tree', 'random_forest', 'xgboost', 'mlp')
+) -> None:
     missing = REQUIRED_BENCHMARK_COLUMNS.difference(frame.columns)
-        
     if missing:
         raise OutputValidationError(f'Benchmark output is missing columns: {sorted(missing)}')
 
     if frame.empty:
-        raise OutputValidationError(f'Benchmark output contains no experiement rows.')
+        raise OutputValidationError('Benchmark output contains no experiment rows.')
 
     expected = set(expected_models)
     observed = set(frame['model'].dropna().astype(str))
     unknown = observed.difference(expected)
-
     if unknown:
         raise OutputValidationError(f'Unknown model names in benchmark output: {sorted(unknown)}')
 
@@ -75,4 +75,4 @@ def validate_benchmark_csv(path: str | Path) -> pd.DataFrame:
         raise FileNotFoundError(f'Benchmark output not found: {path}')
     frame = pd.read_csv(path)
     validate_benchmark_frame(frame)
-    return frame 
+    return frame

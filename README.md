@@ -27,9 +27,12 @@ Feature reduction is implemented as `SelectKBest(f_classif)` so the benchmark ca
 
 ```text
 edge_ids_prototype/
+├── .github/workflow/
+│   └── ci.yml
 ├── app/
 │   └── dashboard.py
 ├── configs/
+│   ├── config_edge.yaml
 │   └── config.yaml
 ├── data/
 ├── logs/
@@ -40,11 +43,14 @@ edge_ids_prototype/
 │   ├── capture.py
 │   ├── create_user.py
 │   ├── make_dataset.py
+│   ├── plot_results.py
 │   ├── run_prediction.py
+│   ├── run_system_acceptance.py
 │   ├── train_models.py
 │   └── validate.py
 ├── src/edge_ids/
 │   ├── alerts.py
+│   ├── api.py
 │   ├── auth.py
 │   ├── config_manager.py
 │   ├── config.py
@@ -61,7 +67,10 @@ edge_ids_prototype/
 │   ├── training.py
 │   └── validation.py
 ├── tests/
+│   ├── test_api.py
 │   └── test_core.py
+├── compose.yaml
+├── Dockerfile
 ├── pyproject.toml
 └── requirements.txt
 ```
@@ -73,7 +82,7 @@ edge_ids_prototype/
 ```bash
 python -m venv .venv 
 
-.venv\\Scripts\\Acitivate.ps1
+source .venv/bin/activate
 
 pip install -r requirements.txt
 ```
@@ -99,6 +108,7 @@ To benchmark all four algorithms with and without feature reduction:
 
 ```bash
 python scripts/benchmark.py \
+  --config configs/config_edge.yaml \
   --dataset data/demo_flows.csv \
   --max-rows 2500 \
   --reduced-k 10 \
@@ -112,11 +122,16 @@ The resulting CSV will contain the following for each model/feature config:
 - recall
 - F1
 - latency per sample
+- throughput (samples per second)
 - process CPU percentage
 - resident memory after inference
 - resident memory delta
 - feature count
 - mean confidence
+- train rows
+- test rows
+- inference repeats
+- model size (bytes)
 
 ## 4. Future plans
 
@@ -208,23 +223,18 @@ The model registry utilizes SHA-256 verification to detect artifact tampering.
 
 Logs are written with rotation to account for limited local storage capabilities.
 
-### (c) Other considerations
+## 7. Automated GitHub Testing
 
-This current software prototype does not implement energy measurement. To achieve this, a third-party system monitoring tool will be implemented during testing within the edge environment. While a specific tool has not yet been identified, **PowerJoular** is a possible option for energy consumption monitoring.
+The repository includes `.github/workflows/ci.yml`, which runs the PyTest suite on pushes and pull requests targeting `main` and `develop`. This provides a basic quality gate before milestone changes are merged.
 
-## 7. Next steps
+## 8. Integrated REST API and deployment
 
-1. Prepare CICIoT2023 and identify the final label and excluded metadata columns
-2. Freeze a preprocessing config before model comparison.
-3. Run all models on the same train/test split and the same feature-reduction method.
-4. Deploy the registered model artifacts into the Fedora IoT 44 VM.
-5. Implement PowerJoular (or other power monitoring tool) and designate monitoring for the IoT VM.
-6. Run the same inference workload repeatedly and record median/p95 latency, CPU utilization, RAM usage, and energy consumption.
-7. Export results for statistical analysis and visualization.
+A FastAPI adapter now exposes the same `EdgeIDSApplication` service used by the Streamlit UI. It provides `GET /health`, `GET /api/v1/models`, `POST /api/v1/predict`, `GET /api/v1/alerts`, and an ADMIN-only `PATCH /api/v1/admin/config`. Non-health routes use the local PBKDF2-hashed user store and HTTP Basic authentication. Keep the API local/isolated; HTTP Basic must be protected by TLS before any remote deployment.
 
-## V 0.2 Notes:
+Example request: `examples/api_predict_request.json`. Run a local API with `uvicorn edge_ids.api:app --app-dir src --host 127.0.0.1 --port 8000`; interactive docs are at `/docs`. The dashboard calls the same service layer directly and supports prediction download.
 
-- Adds extensive unit testing in `tests/test_core.py`
-- Adds validation for benchmark results in `scripts/validate.py` and `src/validation.py` 
-- Adds controls to limit configuration modification via the dashboard with `src/config_manager.py`
-- Adds CI testing with `workflows/ci.yml` that runs unit tests before committing changes.
+The repository also contains `Dockerfile`, `compose.yaml`, `.env.example`, and `.dockerignore` for an integration deployment with API and dashboard containers. Copy `.env.example` to `.env` and follow `SYSTEM_INTEGRATION_EVALUATION.md` for the setup, measured synthetic-data baseline, qualitative assessment, and deployment guidance. `results/benchmark_environment.json` records the synthetic dataset and edge-config hashes, exact runtime versions, and timing policy.
+
+## 9. Latest Integration Check
+
+The final integrated test suite currently covers 28 tests, and the live API acceptance script passes 11/11 checks. The REST prediction response returns classification fields only rather than echoing supplied feature records. The latest synthetic smoke-test benchmark produced eight model/configuration rows and passed schema/range validation. These results are software checks only; use CICIoT2023 and the Fedora IoT 44 test environment for the capstone findings. Full test details, maintenance planning, and the preliminary final report are under `reports/`.

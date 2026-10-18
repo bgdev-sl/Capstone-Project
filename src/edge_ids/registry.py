@@ -16,6 +16,7 @@ class ModelRegistry:
         self.model_dir = Path(model_dir)
         self.model_dir.mkdir(parents=True, exist_ok=True)
 
+    # Reject path-like model identifiers before constructing artifact paths
     @staticmethod
     def _validate_version(model_version: str) -> None:
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,99}", model_version) or ".." in model_version:

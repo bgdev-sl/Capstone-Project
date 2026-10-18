@@ -21,10 +21,11 @@ class PreprocessMetadata:
     transformed_feature_count: int
 
 # Fit and apply one shared feature transformation to all model types
+# Makes model-to-model comparison more controlled
 class FeaturePipeline:
     def __init__(self, feature_reduction_enabled: bool = False, k: int = 64):
         if feature_reduction_enabled and k <= 0:
-            raise ValueError('Feature-reduction k must be greater than zero.')
+            raise ValueError('Feature-reduction k must be greater than zero')
         self.feature_reduction_enabled = feature_reduction_enabled
         self.k = k
         self.preprocessor: ColumnTransformer | None = None
@@ -37,11 +38,14 @@ class FeaturePipeline:
 
         numeric_steps = [
             ('imputer', SimpleImputer(strategy='median')),
-            ('scaler', StandardScaler())
+            ('scaler', StandardScaler()),
         ]
         categorical_steps = [
             ('imputer', SimpleImputer(strategy='most_frequent')),
-            ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=True))
+            (
+                'onehot',
+                OneHotEncoder(handle_unknown='ignore', sparse_output=True),
+            ),
         ]
 
         transformers: list[tuple[str, Pipeline, list[str]]] = []
@@ -49,14 +53,16 @@ class FeaturePipeline:
             transformers.append(('numeric', Pipeline(numeric_steps), numeric_columns))
         if categorical_columns:
             transformers.append(('categorical', Pipeline(categorical_steps), categorical_columns))
+
         if not transformers:
-            raise ValueError('No usable feature columns found after preprocessing.')
+            raise ValueError('No usable feature columns were found after preprocessing')
 
         return ColumnTransformer(transformers=transformers, remainder='drop')
 
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> 'FeaturePipeline':
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "FeaturePipeline":
         self.preprocessor = self._build_preprocessor(X)
         transformed = self.preprocessor.fit_transform(X, y)
+
         transformed_feature_count = int(transformed.shape[1])
         selected_feature_count: int | None = None
 
@@ -64,7 +70,7 @@ class FeaturePipeline:
             actual_k = min(self.k, transformed_feature_count)
             self.selector = SelectKBest(score_func=f_classif, k=actual_k)
             self.selector.fit(transformed, y)
-            selected_feature_count = actual_k 
+            selected_feature_count = actual_k
         else:
             self.selector = None
 
@@ -77,8 +83,8 @@ class FeaturePipeline:
             selected_feature_count=selected_feature_count,
             transformed_feature_count=transformed_feature_count
         )
-        return self 
-
+        return self
+    
     # Transform features using only state learned from the training split
     def transform(self, X: pd.DataFrame):
         if self.preprocessor is None:
@@ -87,9 +93,9 @@ class FeaturePipeline:
         transformed = self.preprocessor.transform(X)
         if self.selector is not None:
             transformed = self.selector.transform(transformed)
-        return transformed 
+        return transformed
 
-    def fit_transform(self, X: pd.DataFrame, y: pd.Series): 
+    def fit_transform(self, X: pd.DataFrame, y: pd.Series):
         self.fit(X, y)
         return self.transform(X)
 

@@ -1,0 +1,45 @@
+services:
+  api:
+    build: .
+    command: ["uvicorn", "edge_ids.api:app", "--host", "0.0.0.0", "--port", "8000"]
+    env_file:
+      - .env
+    environment:
+      EDGE_IDS_ROOT: /app
+      EDGE_IDS_CONFIG: ${EDGE_IDS_CONFIG:-/app/configs/config.yaml}
+      PYTHONPATH: /app/src
+    ports:
+      - "127.0.0.1:${EDGE_IDS_API_PORT:-8000}:8000"
+    volumes:
+      - ./configs:/app/configs
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./logs:/app/logs
+      - ./results:/app/results
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+
+  dashboard:
+    build: .
+    command: ["streamlit", "run", "app/dashboard.py", "--server.address=0.0.0.0", "--server.port=8501", "--server.headless=true"]
+    env_file:
+      - .env
+    environment:
+      EDGE_IDS_ROOT: /app
+      PYTHONPATH: /app/src
+    ports:
+      - "127.0.0.1:${EDGE_IDS_DASHBOARD_PORT:-8501}:8501"
+    volumes:
+      - ./configs:/app/configs
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./logs:/app/logs
+      - ./results:/app/results
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
