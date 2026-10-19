@@ -26,7 +26,7 @@ from edge_ids.data import infer_label_column, load_dataset, normalize_binary_lab
 from edge_ids.evaluation import classification_metrics, safe_confidence
 from edge_ids.integrity import sha256_file, verify_sha256
 from edge_ids.models import SUPPORTED_MODELS, build_model
-from edge_ids.preprocess import FeaturePipeline
+from edge_ids.preprocessing import FeaturePipeline
 from edge_ids.registry import ModelRegistry
 from edge_ids.validation import OutputValidationError, validate_benchmark_frame, validate_benchmark_csv
 

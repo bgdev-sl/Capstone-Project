@@ -16,7 +16,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from edge_ids.api import create_app
 from edge_ids.auth import create_user_store
-from edge_ids.preprocess import FeaturePipeline
+from edge_ids.preprocessing import FeaturePipeline
 from edge_ids.registry import ModelRegistry
 
 
