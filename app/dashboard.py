@@ -1,8 +1,17 @@
+"""Local Streamlit dashboard for the ML-based edge IDS prototype.
+
+This is a research dashboard, not a production security console. It demonstrates
+RBAC, model integrity verification, inference, alerts, and resource measurements
+from the architecture diagram.
+"""
+
 from __future__ import annotations
+
 import json
 import os
 from pathlib import Path
 import sys
+
 import pandas as pd
 import streamlit as st
 
@@ -22,6 +31,7 @@ USER_FILE = ROOT / CONFIG.get("paths", {}).get("user_file", "configs/users.json"
 st.set_page_config(page_title="Edge ML IDS", layout="wide")
 st.title("ML-Based IDS — Edge Prototype")
 st.caption("Experimental environment only; not a production IDS.")
+
 
 if "user" not in st.session_state:
     st.session_state.user = None

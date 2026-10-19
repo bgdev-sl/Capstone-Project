@@ -1,11 +1,12 @@
-# Minimal local authentication/RBAC helper for the prototype dashboard
+"""Minimal local authentication/RBAC helper for the prototype dashboard.
 
-# Intentionally not production level:
-# It is meant to demonstrate RBAC while keeping creds local.
-# Passwords are hashed using PBKDF2-HMAC-SHA256 with a random salt.
-# Software is meant for testing performance and resource consumption of different models 
+This is intentionally not a production identity provider. It demonstrates the
+architecture's RBAC boundary while keeping credentials local to the experiment.
+Passwords are hashed using PBKDF2-HMAC-SHA256 with a random salt.
+"""
 
 from __future__ import annotations
+
 import base64
 import hashlib
 import hmac
@@ -14,46 +15,51 @@ import os
 from pathlib import Path
 from typing import Any
 
+
 ITERATIONS = 200_000
+
 
 def _hash_password(password: str, salt: bytes | None = None) -> str:
     salt = salt or os.urandom(16)
-    digest = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, ITERATIONS)
-    return f'pbkdf2_sha256${ITERATIONS}${base64.b64encode(salt).decode()}${base64.b64encode(digest).decode()}'
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, ITERATIONS)
+    return f"pbkdf2_sha256${ITERATIONS}${base64.b64encode(salt).decode()}${base64.b64encode(digest).decode()}"
+
 
 def _verify_password(password: str, stored: str) -> bool:
-    scheme, iterations, salt_b64, digest_b64 = stored.split('$')
-    if scheme != 'pbkdf2_sha256':
+    scheme, iterations, salt_b64, digest_b64 = stored.split("$")
+    if scheme != "pbkdf2_sha256":
         return False
     salt = base64.b64decode(salt_b64)
     expected = base64.b64decode(digest_b64)
-    actual = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, int(iterations))
+    actual = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, int(iterations))
     return hmac.compare_digest(actual, expected)
 
-# Create or update one local account
+
 def create_user_store(path: str | Path, username: str, password: str, role: str) -> None:
+    """Create or update one local demo account."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     users: dict[str, Any] = {}
     if path.exists():
-        users = json.loads(path.read_text(encoding='utf-8'))
+        users = json.loads(path.read_text(encoding="utf-8"))
 
     role = role.upper()
-    if role not in {'ADMIN', 'ANALYST'}:
-        raise ValueError('Role must be ADMIN or ANALYST.')
+    if role not in {"ADMIN", "ANALYST"}:
+        raise ValueError("Role must be ADMIN or ANALYST.")
 
-    users[username] = {'password_hash': _hash_password(password), 'role': role}
-    path.write_text(json.dumps(users, indent=2), encoding='utf-8')
+    users[username] = {"password_hash": _hash_password(password), "role": role}
+    path.write_text(json.dumps(users, indent=2), encoding="utf-8")
 
-# Return authenticated user's identity and role, or None on failure
+
 def authenticate(path: str | Path, username: str, password: str) -> dict[str, str] | None:
+    """Return the authenticated user's identity and role, or None on failure."""
     path = Path(path)
     if not path.exists():
         return None
-    users = json.loads(path.read_text(encoding='utf-8'))
+    users = json.loads(path.read_text(encoding="utf-8"))
     record = users.get(username)
     if not record:
         return None
-    if not _verify_password(password, record['password_hash']):
+    if not _verify_password(password, record["password_hash"]):
         return None
-    return {'username': username, 'role': record['role']}
+    return {"username": username, "role": record["role"]}

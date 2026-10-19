@@ -1,5 +1,6 @@
 # Core runtime, ML, and REST API
 numpy>=1.26
+scipy>=1.10
 pandas>=2.2
 scikit-learn>=1.4
 xgboost>=2.0

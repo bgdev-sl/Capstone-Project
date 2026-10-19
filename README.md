@@ -188,6 +188,8 @@ The resulting CSV will contain the following for each model/feature config:
 2. Start the **Streamlit** dashboard:
     ```bash
     streamlit run app/dashboard.py
+    # OR:
+    python -m streamlit run app/dashboard.py
     ```
     >---
     > **Note**
@@ -235,6 +237,63 @@ Example request: `examples/api_predict_request.json`. Run a local API with `uvic
 
 The repository also contains `Dockerfile`, `compose.yaml`, `.env.example`, and `.dockerignore` for an integration deployment with API and dashboard containers. Copy `.env.example` to `.env` and follow `SYSTEM_INTEGRATION_EVALUATION.md` for the setup, measured synthetic-data baseline, qualitative assessment, and deployment guidance. `results/benchmark_environment.json` records the synthetic dataset and edge-config hashes, exact runtime versions, and timing policy.
 
-## 9. Latest Integration Check
+## 9. V 0.5.0 EXAMPLE IMPLIMENTATION
 
-The final integrated test suite currently covers 28 tests, and the live API acceptance script passes 11/11 checks. The REST prediction response returns classification fields only rather than echoing supplied feature records. The latest synthetic smoke-test benchmark produced eight model/configuration rows and passed schema/range validation. These results are software checks only; use CICIoT2023 and the Fedora IoT 44 test environment for the capstone findings. Full test details, maintenance planning, and the preliminary final report are under `reports/`.
+Create a virtual environemnt and install the dependencies:
+
+```bash
+python -m venv .venv
+
+source .venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+Benchmark all algorithms with and without feature reduction:
+
+```bash
+python scripts/benchmark.py \
+  --config configs/config_edge.yaml \
+  --dataset data/CICIoT2023.csv \
+  --max-rows 500000 \
+  --sampling-chunk-rows 5000 \
+  --reduced-k 24 \
+  --output results/benchmark_sample-500_000.csv
+```
+
+The resulting CSV contains the following metrics for each model/feature config:
+
+- accuracy
+- precision
+- recall
+- F1
+- inference latency per sample
+- process CPU percentage
+- resident memory after inference
+- resident memory delta
+- feature count
+- mean confidence
+
+## 10. Core Testing and Validation
+
+To run the testing suite:
+
+```bash
+python -m pytest -q
+```
+
+To validate benchmark output:
+
+```bash
+python scripts/validate.py results/benchmark_sample-500_000.csv
+```
+
+Testing covers dataset handling, label normalization, train/test splitting, preprocessing and feature reduction, model factories, evaluation metrics, confidence calculation, model integrity, model registry behavior, authentication/RBAC, alert generation, controlled configuration changes, and benchmark-output validation.
+
+
+## 11. Futher Plans
+
+1. CICIoT2023.csv will be split into two seperate datasets. 
+2. The first half of the dataset will be used to model training and benchmarking. 
+3. The latter half of the dataset will be used for evaluating artifact performance within the IoT environment.
+4. Model performance within the IoT environment will be evaluated to assess performance and resource consumption.

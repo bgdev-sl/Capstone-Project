@@ -7,8 +7,10 @@ paths:
   model_dir: models
   log_dir: logs
   result_dir: results
-  user_file: configs/users.json 
+  user_file: configs/users.json
 
+# CICIoT2023 can contain identifying or high-cardinality metadata fields.
+# Keep the excluded fields configurable so the same pipeline can be reused for another dataset.
 data:
   label_column: null
   drop_columns:
@@ -17,7 +19,16 @@ data:
     - Dst_IP
     - Timestamp
   max_rows: null
+  # Rows read per CSV chunk when --max-rows requests a reservoir sample.
+  sampling_chunk_rows: 10000
   test_size: 0.20
+
+# Numeric safety for malformed rates (NaN/Inf) and extreme finite values.
+# Values beyond max_abs_numeric are clipped; transformed values are then bounded.
+preprocessing:
+  numeric_safety:
+    max_abs_numeric: 1.0e12
+    max_abs_standardized: 100.0
 
 feature_reduction:
   enabled: true
@@ -52,4 +63,5 @@ security:
   log_backup_count: 3
 
 evaluation:
+  # Repeated warmed inference reduces timing noise for fast classifiers.
   inference_repeats: 20

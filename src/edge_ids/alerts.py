@@ -1,6 +1,7 @@
-# Alert generation and rotating logging
+"""Alert generation and secure-ish rotating prototype logging."""
 
 from __future__ import annotations
+
 import json
 import hashlib
 import logging
@@ -8,53 +9,58 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Iterable
 
-# Serialize log records as JSON objects
+
 class JsonLineFormatter(logging.Formatter):
+    """Serialize log records as one JSON object per line for easy ingestion."""
+
     def format(self, record: logging.LogRecord) -> str:
-        payload = getattr(record, 'payload', None)
+        payload = getattr(record, "payload", None)
         if payload is None:
-            payload = {'message': record.getMessage()}
-        payload = {'level': record.levelname, 'logger': record.name, **payload}
+            payload = {"message": record.getMessage()}
+        payload = {"level": record.levelname, "logger": record.name, **payload}
         return json.dumps(payload, ensure_ascii=False, default=str)
 
-# Generate alerts for malicious predictions
+
 class AlertManager:
+    """Generate alerts for malicious predictions above a configurable threshold."""
+
     def __init__(self, log_dir: str | Path, confidence_threshold: float = 0.80, rotation_mb: int = 5, backup_count: int = 3):
         log_dir = Path(log_dir)
         log_dir.mkdir(parents=True, exist_ok=True)
         self.confidence_threshold = confidence_threshold
 
-        # Give each log destination its own logger so test runs and multiple local application instances do not accidentally share file handlers
-        logger_key = hashlib.sha256(str(log_dir.resolve()).encode('utf-8')).hexdigest()[:12]
-        self.logger = logging.getLogger(f'edge_ids.alerts.{logger_key}')
+        # Give each log destination its own logger so test runs and multiple
+        # local application instances do not accidentally share file handlers.
+        logger_key = hashlib.sha256(str(log_dir.resolve()).encode("utf-8")).hexdigest()[:12]
+        self.logger = logging.getLogger(f"edge_ids.alerts.{logger_key}")
         self.logger.setLevel(logging.INFO)
         self.logger.propagate = False
 
         if not self.logger.handlers:
             handler = RotatingFileHandler(
-                log_dir / 'alerts.jsonl',
+                log_dir / "alerts.jsonl",
                 maxBytes=rotation_mb * 1024 * 1024,
                 backupCount=backup_count,
-                encoding='utf-8',
+                encoding="utf-8",
             )
             handler.setFormatter(JsonLineFormatter())
             self.logger.addHandler(handler)
 
     def emit(self, alert: dict) -> None:
-        self.logger.info('alert', extra={'payload': alert})
+        self.logger.info("alert", extra={"payload": alert})
 
-# Create alert records for malicious predictions
     def inspect_predictions(self, predictions: Iterable[dict]) -> list[dict]:
+        """Create alert records only for malicious, sufficiently confident predictions."""
         alerts = []
         for item in predictions:
-            malicious = int(item.get('prediction', 0)) == 1
-            confidence = float(item.get('confidence', 0.0))
+            malicious = int(item.get("prediction", 0)) == 1
+            confidence = float(item.get("confidence", 0.0))
             if malicious and confidence >= self.confidence_threshold:
                 alert = {
-                    'type': 'intrusion_detected',
-                    'confidence': confidence,
-                    'model_version': item.get('model_version'),
-                    'timestamp_utc': item.get('timestamp_utc'),
+                    "type": "intrusion_detected",
+                    "confidence": confidence,
+                    "model_version": item.get("model_version"),
+                    "timestamp_utc": item.get("timestamp_utc"),
                 }
                 self.emit(alert)
                 alerts.append(alert)
