@@ -1,16 +1,20 @@
-# Resource and inference-performance measuring
+"""Resource and inference-performance measurement helpers."""
 
 from __future__ import annotations
+
 from dataclasses import asdict, dataclass
 from time import perf_counter
 from typing import Callable, Generic, TypeVar
+
 import psutil
 
-T = TypeVar('T')
+T = TypeVar("T")
 
-# Measurements recorded during model operation
+
 @dataclass
 class ResourceMetrics:
+    """Measurements recorded during a model operation."""
+
     elapsed_ms: float
     latency_ms_per_sample: float
     cpu_percent: float
@@ -23,9 +27,15 @@ class ResourceMetrics:
     def as_dict(self) -> dict:
         return asdict(self)
 
-# Measure process-level resource use for an operation
-# Measurements are intentionally lightweight to run on resource-constrained systems
+
 class ResourceMonitor:
+    """Measure process-level resource use for an operation.
+
+    Measurements are intentionally lightweight so they can run on an edge-like
+    VM. They describe the process, not the entire host, and should therefore be
+    reported as prototype measurements rather than hardware-independent truths.
+    """
+
     def __init__(self):
         self.process = psutil.Process()
 
@@ -33,6 +43,7 @@ class ResourceMonitor:
         rss_before = self.process.memory_info().rss
         cpu_before = self.process.cpu_times()
         start = perf_counter()
+
         result = operation()
 
         elapsed = perf_counter() - start
@@ -41,8 +52,9 @@ class ResourceMonitor:
 
         elapsed_ms = elapsed * 1000.0
         latency_ms_per_sample = elapsed_ms / max(sample_count, 1)
-        # Process CPU time divided by wall time is more interpretable for short operations than psutil's non-blocking instantaneous percentage. 
-        # It can exceed 100% when a multi-threaded estimator uses multiple CPU cores.
+        # Process CPU time divided by wall time is more interpretable for short
+        # operations than psutil's non-blocking instantaneous percentage. It can
+        # exceed 100% when a multi-threaded estimator uses multiple CPU cores.
         cpu_seconds = (cpu_after.user - cpu_before.user) + (cpu_after.system - cpu_before.system)
         cpu_percent = (cpu_seconds / elapsed * 100.0) if elapsed > 0 else 0.0
         throughput = sample_count / elapsed if elapsed > 0 and sample_count > 0 else 0.0

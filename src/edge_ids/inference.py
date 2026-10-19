@@ -1,26 +1,30 @@
-# ML interface for batch inference and resource measurement
+"""ML interface for batch inference and resource measurement."""
 
 from __future__ import annotations
+
 from datetime import datetime, timezone
 from typing import Any
+
 import pandas as pd
 
 from .alerts import AlertManager
 from .evaluation import safe_confidence
 from .monitoring import ResourceMonitor
 
-# Run a registered model against flow features
+
 class InferenceEngine:
+    """Run a registered model against flow features."""
+
     def __init__(self, bundle: dict[str, Any], model_version: str, alert_manager: AlertManager | None = None):
-        self.model = bundle['model']
-        self.features = bundle['features']
+        self.model = bundle["model"]
+        self.features = bundle["features"]
         self.model_version = model_version
         self.alert_manager = alert_manager
 
-    # Predict benign/malicious labels and return resource measurements
     def predict(self, frame: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, Any]]:
+        """Predict benign/malicious labels and return resource measurements."""
         if frame.empty:
-            raise ValueError('Cannot perform inference on an empty DataFrame')
+            raise ValueError("Cannot perform inference on an empty DataFrame.")
 
         monitor = ResourceMonitor()
 
@@ -37,13 +41,13 @@ class InferenceEngine:
 
         timestamp = datetime.now(timezone.utc).isoformat()
         result = frame.copy()
-        result['prediction'] = prediction.astype(int)
-        result['class'] = result['prediction'].map({0: 'benign', 1: 'malicious'})
-        result['confidence'] = confidence
-        result['model_version'] = self.model_version
-        result['timestamp_utc'] = timestamp
+        result["prediction"] = prediction.astype(int)
+        result["class"] = result["prediction"].map({0: "benign", 1: "malicious"})
+        result["confidence"] = confidence
+        result["model_version"] = self.model_version
+        result["timestamp_utc"] = timestamp
 
         if self.alert_manager:
-            self.alert_manager.inspect_predictions(result.to_dict(orient='records'))
+            self.alert_manager.inspect_predictions(result.to_dict(orient="records"))
 
         return result, resources.as_dict()
