@@ -1,40 +1,30 @@
 project:
   random_state: 42
   binary_labeling: true
-
 paths:
   data_dir: data
   model_dir: models
   log_dir: logs
   result_dir: results
   user_file: configs/users.json
-
-# CICIoT2023 can contain identifying or high-cardinality metadata fields.
-# Keep the excluded fields configurable so the same pipeline can be reused for another dataset.
 data:
   label_column: null
   drop_columns:
-    - Flow_ID
-    - Src_IP
-    - Dst_IP
-    - Timestamp
+  - Flow_ID
+  - Src_IP
+  - Dst_IP
+  - Timestamp
   max_rows: null
-  # Rows read per CSV chunk when --max-rows requests a reservoir sample.
   sampling_chunk_rows: 10000
-  test_size: 0.20
-
-# Numeric safety for malformed rates (NaN/Inf) and extreme finite values.
-# Values beyond max_abs_numeric are clipped; transformed values are then bounded.
+  test_size: 0.2
 preprocessing:
   numeric_safety:
     max_abs_numeric: 1.0e12
     max_abs_standardized: 100.0
-
 feature_reduction:
   enabled: true
   method: select_k_best_f_classif
   k: 64
-
 models:
   decision_tree:
     max_depth: 16
@@ -47,21 +37,20 @@ models:
   xgboost:
     n_estimators: 200
     max_depth: 8
-    learning_rate: 0.10
-    subsample: 0.80
-    colsample_bytree: 0.80
+    learning_rate: 0.1
+    subsample: 0.8
+    colsample_bytree: 0.8
     n_jobs: -1
   mlp:
-    hidden_layer_sizes: [64, 32]
+    hidden_layer_sizes:
+    - 64
+    - 32
     max_iter: 30
     batch_size: 256
     early_stopping: true
-
 security:
-  alert_confidence_threshold: 0.80
+  alert_confidence_threshold: 0.81
   log_rotation_mb: 5
   log_backup_count: 3
-
 evaluation:
-  # Repeated warmed inference reduces timing noise for fast classifiers.
   inference_repeats: 20

@@ -1,0 +1,133 @@
+{
+  "model_version": "random_forest_v1_full",
+  "created_utc": "2026-10-20T12:33:33.397155+00:00",
+  "artifact": "random_forest_v1_full.joblib",
+  "sha256": "c3f4dc57f3c9ab82c61cc7341e456e91e6536eebc9db617e1a4977cce42465d6",
+  "artifact_size_bytes": 43051316,
+  "metadata": {
+    "model_name": "random_forest",
+    "model_version": "random_forest_v1_full",
+    "created_utc": "2026-10-20T12:33:31.626028+00:00",
+    "feature_reduction": false,
+    "feature_k": null,
+    "output_feature_count": 40,
+    "preprocessing_metadata": {
+      "numeric_columns": [
+        "Unnamed: 0",
+        "Header_Length",
+        "Protocol Type",
+        "Time_To_Live",
+        "Rate",
+        "fin_flag_number",
+        "syn_flag_number",
+        "rst_flag_number",
+        "psh_flag_number",
+        "ack_flag_number",
+        "ece_flag_number",
+        "cwr_flag_number",
+        "ack_count",
+        "syn_count",
+        "fin_count",
+        "rst_count",
+        "HTTP",
+        "HTTPS",
+        "DNS",
+        "Telnet",
+        "SMTP",
+        "SSH",
+        "IRC",
+        "TCP",
+        "UDP",
+        "DHCP",
+        "ARP",
+        "ICMP",
+        "IGMP",
+        "IPv",
+        "LLC",
+        "Tot sum",
+        "Min",
+        "Max",
+        "AVG",
+        "Std",
+        "Tot size",
+        "IAT",
+        "Number",
+        "Variance"
+      ],
+      "categorical_columns": [],
+      "feature_reduction_enabled": false,
+      "selected_feature_count": null,
+      "transformed_feature_count": 40,
+      "max_abs_numeric": 1000000000000.0,
+      "max_abs_standardized": 100.0,
+      "numeric_nonfinite_to_missing": 472,
+      "numeric_values_clipped": 0
+    },
+    "train_rows": 8000000,
+    "test_rows": 2000000,
+    "inference_repeats": 20,
+    "metrics": {
+      "accuracy": 0.992809,
+      "precision": 0.9965581669780706,
+      "recall": 0.996077588192834,
+      "f1": 0.9963178196330723,
+      "confusion_matrix": [
+        [
+          39890,
+          6720
+        ],
+        [
+          7662,
+          1945728
+        ]
+      ],
+      "classification_report": {
+        "0": {
+          "precision": 0.838871130551817,
+          "recall": 0.8558249302724737,
+          "f1-score": 0.84726322720418,
+          "support": 46610.0
+        },
+        "1": {
+          "precision": 0.9965581669780706,
+          "recall": 0.996077588192834,
+          "f1-score": 0.9963178196330723,
+          "support": 1953390.0
+        },
+        "accuracy": 0.992809,
+        "macro avg": {
+          "precision": 0.9177146487649438,
+          "recall": 0.9259512592326539,
+          "f1-score": 0.9217905234186261,
+          "support": 2000000.0
+        },
+        "weighted avg": {
+          "precision": 0.9928832705941568,
+          "recall": 0.992809,
+          "f1-score": 0.992844102356517,
+          "support": 2000000.0
+        }
+      }
+    },
+    "train_resource_metrics": {
+      "elapsed_ms": 429827.8422000003,
+      "latency_ms_per_sample": 0.05372848027500004,
+      "cpu_percent": 1471.1158757504973,
+      "rss_before_mb": 4515.6484375,
+      "rss_after_mb": 209.77734375,
+      "rss_delta_mb": -4305.87109375,
+      "throughput_samples_per_second": 18612.10283413324,
+      "sample_count": 8000000
+    },
+    "inference_resource_metrics": {
+      "elapsed_ms": 186362.9713000264,
+      "latency_ms_per_sample": 0.00465907428250066,
+      "cpu_percent": 753.2679320399959,
+      "rss_before_mb": 832.56640625,
+      "rss_after_mb": 932.09765625,
+      "rss_delta_mb": 99.53125,
+      "throughput_samples_per_second": 214634.91229491003,
+      "sample_count": 40000000
+    }
+  }
+}
