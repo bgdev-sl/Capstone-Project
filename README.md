@@ -293,7 +293,7 @@ python scripts/run_prediction.py \
 `scripts/evaluate_models.py` can be used to evaluate all models against new dataset(s) and evaluate the performance and resource metrics for each dataset run. The following is an example use case for running this script:
 
 ```bash
-python scripts/evaluate_models_on_datasets.py \
+python scripts/evaluate_models.py \
   --dataset-dir data/evaluation_datasets \
   --pattern "*.csv" \
   --output-dir results/multi_dataset_evaluation \
