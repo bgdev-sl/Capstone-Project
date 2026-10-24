@@ -97,7 +97,19 @@ def main() -> int:
         "/api/v1/models",
         credentials=(ANALYST_USER, ANALYST_PASSWORD),
     )
-    verify(len(models.get("models", [])) >= 4, "Expected at least four registered model versions")
+    registered_models = models.get("models", [])
+    verify(len(registered_models) >= 4, "Expected at least four registered model versions")
+    registered_versions = {
+        item.get("model_version") for item in registered_models
+        if isinstance(item, dict)
+    }
+    requested_model = example.get("model_version")
+    verify(
+        requested_model in registered_versions,
+        "Acceptance request model is not registered by the running API: "
+        f"{requested_model!r}. Registered versions: {sorted(v for v in registered_versions if v)}. "
+        "Check that the API is using this project directory and that the matching .joblib/.json files exist.",
+    )
     send(
         "Analyst can retrieve alerts",
         "/api/v1/alerts",
@@ -111,8 +123,33 @@ def main() -> int:
         payload=example,
         credentials=(ANALYST_USER, ANALYST_PASSWORD),
     )
-    verify(prediction.get("count") == len(example["records"]), "Prediction count mismatch")
-    verify(len(prediction.get("predictions", [])) == len(example["records"]), "Prediction list mismatch")
+    # Check HTTP status and response shape before comparing counts
+    prediction_status = results[-1][2]
+    expected_rows = len(example["records"])
+    if prediction_status != 200:
+        raise AssertionError(
+            "Prediction endpoint expected HTTP 200, but received "
+            f"HTTP {prediction_status}. Response body: {raw_prediction[:2000]}"
+        )
+    verify(
+        "count" in prediction,
+        "Prediction response is missing the 'count' field. "
+        f"Response body: {raw_prediction[:2000]}",
+    )
+    actual_count = prediction.get("count")
+    actual_rows = len(prediction.get("predictions", []))
+    verify(
+        actual_count == expected_rows,
+        "Prediction count mismatch: "
+        f"request_rows={expected_rows}, response_count={actual_count!r}, "
+        f"prediction_rows={actual_rows}. Response body: {raw_prediction[:2000]}",
+    )
+    verify(
+        actual_rows == expected_rows,
+        "Prediction list mismatch: "
+        f"request_rows={expected_rows}, response_count={actual_count!r}, "
+        f"prediction_rows={actual_rows}. Response body: {raw_prediction[:2000]}",
+    )
     metric_names = prediction.get("resource_metrics", {})
     verify("latency_ms_per_sample" in metric_names, "Inference latency metric missing")
     output = prediction["predictions"][0]

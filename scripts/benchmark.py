@@ -42,6 +42,36 @@ def parse_args():
     )
     return parser.parse_args()
 
+def next_model_version(registry, model_name: str, suffix: str) -> str:
+    """
+    Return the next unused version identifier for a model/configuration.
+
+    Existing model artifacts and manifests are preserved. Version numbering
+    is independent for each model and feature configuration.
+    """
+    existing_versions = {
+        str(item.get("model_version"))
+        for item in registry.list_models()
+        if item.get("model_version")
+    }
+
+    version_num = 1
+
+    while True:
+        candidate = f"{model_name}_v{version_num}_{suffix}"
+
+        # Check both files in case an earlier run left a partial artifact.
+        artifact_path = registry.model_dir / f"{candidate}.joblib"
+        manifest_path = registry.model_dir / f"{candidate}.json"
+
+        if (
+            candidate not in existing_versions
+            and not artifact_path.exists()
+            and not manifest_path.exists()
+        ):
+            return candidate
+
+        version_num += 1
 
 def main():
     args = parse_args()
@@ -87,7 +117,12 @@ def main():
     for model_name in args.models:
         for reduced, k in experiments:
             suffix = f"reduced{k}" if reduced else "full"
-            version = f"{model_name}_v1_{suffix}"
+            # Find an unused version so existing models are not overwritten.
+            version = next_model_version(
+                registry,
+                model_name,
+                suffix,
+            )
             result = train_one(
                 model_name,
                 X,
